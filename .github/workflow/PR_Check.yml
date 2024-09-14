@@ -1,0 +1,18 @@
+name: Check PR source branch
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+jobs:
+  check-pr-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check PR source branch
+      if: github.event.pull_request.base.ref == 'main'
+      run: |
+        if [ "${{ github.head_ref }}" != "dev" ] || [ "${{ github.base_ref }}" != "main" ]; then
+          echo "Pull requests must come from 'dev' towards 'main'."
+          exit 1
+        fi
