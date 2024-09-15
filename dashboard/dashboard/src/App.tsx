@@ -1,12 +1,13 @@
 import "./App.css";
 import Dashboard from "./BigComponents/MainDashboard/Dashboard";
+import SecondaryDashboard from "./BigComponents/SecondaryDashboard/SecondaryDashboard";
 
 function App() {
-  return (
-    <>
-      <Dashboard />
-    </>
-  );
+    return (
+        <>
+            <SecondaryDashboard />
+        </>
+    );
 }
 
 export default App;
