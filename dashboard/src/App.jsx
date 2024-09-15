@@ -1,7 +1,7 @@
 import { Button } from "@nextui-org/react";
 
-import ModalCrear from "./ModalCrear/ModalCrear";
+import DashboardSecundario from "./DashboardSecundario/DashboardSecundario";
 
 export default function App() {
-    return <ModalCrear />;
+    return <DashboardSecundario />;
 }
