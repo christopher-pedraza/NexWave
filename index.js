@@ -4,7 +4,7 @@ const app = express();
 
 const { generateGuidance, generateProposal } = require("./text_generation.js");
 const prompt = "Como puedo invertir mi dinero?";
-
+/*
 const phoneNumberId = "391623854042683"; // Reemplaza con tu ID de número de teléfono
 const accessToken =
 	"EAAHRUwjl9O4BOZCcWxvWSyCq5OvMga9GeUiIh2SN4gu93Ju37FudXH9UH5IJRrO8rUrV6MJ5dsZBjBiH7XpkSwtL4UcugJkt4YE3b63ZBZBuWDjNeQILKszWDyXD0Py27DWCDM5JKpW3cNkFx3ZBUcRlfjjCLtfJtFga0WKpLytUf5ZAG3nHT731TuGLY9cSrwmn9Yt1ZA4mcletqwZB4oBHxSxRIl17"; // Reemplaza con tu token de acceso
@@ -21,6 +21,23 @@ var counter = 0;
 const apiKey = "341af7eb-f5c0-4893-b2b9-b38e24b63d28";
 const apiSecret = "7228ea63-651c-4a45-b0e2-89db7b8aa429";
 const veriffUrl = "https://stationapi.veriff.com/v1/sessions";
+*/
+const phoneNumberId = process.env.phoneNumberId; // Reemplaza con tu ID de número de teléfono
+const accessToken = process.env.accessToken; // Reemplaza con tu token de acceso
+const verificationToken = process.env.verificationToken; // Esto debe coincidir con el token que ingresaste en Meta
+const targetNumber = "528332666331";
+var estadoQuiz = 0;
+var estadoQnAprimermensaje = false;
+// Estado de la verificación Veriff
+let estadoVeriff = false;
+var correo = false;
+var counter = 0;
+
+// Tu clave de API y URL de Veriff
+const apiKey = process.env.apiKey;
+const apiSecret = process.env.apiSecret;
+const veriffUrl = process.env.veriffUrl;
+
 
 async function startVeriffVerification(userId, callbackUrl) {
 	try {
