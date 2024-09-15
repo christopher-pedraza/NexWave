@@ -133,6 +133,13 @@ app.post("/webhook", (req, res) => {
         
 
 		console.log(`Received message from ${from}: ${messageBody}`);
+
+        if (estadoQnA[from]) {
+			// Manejar la respuesta del Q&A
+			const buttonResponse = message.interactive && message.interactive.button_reply && message.interactive.button_reply.title;
+			handleQnAResponse(from, buttonResponse || messageBody);
+        }
+
         if (estadoQuiz == 1) {
             // Si hay una respuesta a un botón, manejar el quiz
             handleQuizResponse(targetNumber, req.body.entry[0].changes[0].value.messages[0].interactive.button_reply
@@ -238,6 +245,7 @@ const buttons = [
 ];
 
 let userAnswers = {}; // Objeto para almacenar las respuestas de los usuarios
+let estadoQnA = {}; // Almacena el estado de Q&A por usuario
 
 // Función para enviar la pregunta del quiz con botones
 async function sendQuizQuestion(to, questionIndex) {
@@ -267,38 +275,61 @@ async function handleQuizResponse(senderId, response) {
     await sendQuizQuestion(senderId, currentQuestionIndex);
 }
 
-
+// Pregunta para el Q&A
 const qnaQuestions = [
 	{
 		question:
-			"Tienes alguna otra duda?",
+			"¿Tienes alguna otra duda sobre finanzas?",
 		answers: [
-			truncateText("Comprar una casa", 20),
-			truncateText("Rentar departamento", 20),
-			truncateText("No estoy seguro", 20),
+			truncateText("Sí", 20),
+			truncateText("No", 20),
 		],
 	},
 ]
 
 // Función para iniciar el Q&A
-async function startQnA(to) {
+async function startQnA(to, userMessage) {
+    estadoQnA[to] = true; // Marca que el usuario está en el Q&A
+    await sendMessage(to, "¿Qué dudas acerca de finanzas tienes?");
 
-    generateGuidance()
+    const guidance = await generateGuidance(userMessage);
 
+    // Envía la orientación generada al usuario
+    await sendMessage(to, guidance);
+
+    // Manda la primera pregunta del Q&A con botones
     const { question, answers } = qnaQuestions[0];
-    await sendButtonsMessage(to, "Chat de dudas", question, answers);
+    await sendButtonsMessage(to, "Chat de dudas 🤖", question, answers);
 }
 
+async function handleQnAResponse(senderId, response) {
+    if (estadoQnA[senderId]) {
+        if (response === "No") {
+            // Si el usuario responde "No", termina el Q&A
+            await sendMessage(senderId, "Gracias por participar en el chat de dudas.");
+            estadoQnA[senderId] = false; // Marca que ya no está en el Q&A
+        } else if (response === "Sí") {
+            // Si responde "Sí", continúa el Q&A
+            await sendMessage(senderId, "Por favor, escribe tu próxima duda.");
+        } else {
+            // Respuesta no esperada
+            await sendMessage(senderId, "Por favor selecciona una opción válida.");
+            const { question, answers } = qnaQuestions[0];
+            await sendButtonsMessage(senderId, "Chat de dudas 🤖", question, answers);
+        }
+    }
+}
 
 
 async function iniciarChatbot(req) {
     const payload =
 	req.body.entry[0].changes[0].value.messages[0].interactive.button_reply.title;
+    const userMessage = req.body.entry[0].changes[0].value.messages[0].text.body; // Extrae el texto del usuario
 	switch (payload) {
 		case "Chat de dudas 🤖":
 			// Código para iniciar el chat de dudas
 			console.log("Iniciando chat de dudas...");
-			// Aquí puedes incluir lógica adicional o llamar a otra función
+            await startQnA(targetNumber, userMessage);
 			break;
 
 		case "Crear una cuenta 📝":
