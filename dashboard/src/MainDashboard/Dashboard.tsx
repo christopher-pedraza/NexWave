@@ -13,12 +13,18 @@ import { EyeIcon } from "./AssetsDashboard/EyeIcon";
 import { DeleteIcon } from "./AssetsDashboard/DeleteIcon";
 import { data } from "./AssetsDashboard/data";
 import Title from "./Title";
+import { Divider } from "@nextui-org/react";
 
 export default function Dashboard() {
   return (
     <>
       <Title />
-      <Table isStriped aria-label="Example static collection table">
+      <Divider />
+      <Table
+        isStriped
+        aria-label="Example static collection table"
+        className="mt-3"
+      >
         <TableHeader>
           <TableColumn>NOMBRE</TableColumn>
           <TableColumn>SENTIMIENTO</TableColumn>
@@ -33,9 +39,9 @@ export default function Dashboard() {
               <TableCell>{item.sentimiento}</TableCell>
               <TableCell>{item.cuentasCreadas.toLocaleString()}</TableCell>
               <TableCell>
-                <Chip color={item.estatus === "Activo" ? "primary" : "danger"}>
-                  {item.estatus}
-                </Chip>
+                {/* <Chip color={item.estatus === "Activo" ? "primary" : "danger"}> */}
+                {item.estatus}
+                {/* </Chip> */}
               </TableCell>
               <TableCell>
                 <div className="relative flex items-center gap-2">
