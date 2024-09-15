@@ -1,3 +1,5 @@
+import React from "react";
+
 export const DeleteIcon = (props) => (
   <svg
     aria-hidden="true"

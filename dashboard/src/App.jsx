@@ -1,9 +1,11 @@
-import { Button } from "@nextui-org/react";
+import Dashboard from "./MainDashboard/Dashboard";
 
 export default function App() {
   return (
-    <Button color="primary">
-      Click on the Vite and React logos to learn more
-    </Button>
+    <>
+      <div className="p-16 m-auto">
+        <Dashboard />
+      </div>
+    </>
   );
 }
