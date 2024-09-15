@@ -38,6 +38,17 @@ if (!API_SECRET) throw "API_SECRET environment variable is required";
             const media = await getMedia(verificationId);
             console.log(JSON.stringify(media, null, 4));
         });
+
+        // timeout 5 seconds before getting the person
+        setTimeout(async () => {
+            console.log("Getting PERSON for the verification session");
+            const person = await getPerson(verificationId);
+            console.log(JSON.stringify(person, null, 4));
+            // Get DECISION
+            console.log("Getting DECISION for the verification session");
+            const curp = await getDecision(verificationId);
+            console.log(JSON.stringify(curp, null, 4));
+        }, 5000);
     } catch (err) {
         console.log(err);
     }
@@ -47,11 +58,11 @@ async function start() {
     try {
         const payload = {
             verification: {
-                person: {
-                    firstName: "Nican Onio",
-                    lastName: "Xander [EXAMPLE]",
-                    idNumber: "001-1505561-1",
-                },
+                // person: {
+                //     firstName: "Nican Onio",
+                //     lastName: "Xander [EXAMPLE]",
+                //     idNumber: "001-1505561-1",
+                // },
                 document: {
                     number: "VL0199336",
                     type: "PASSPORT",
@@ -128,6 +139,99 @@ async function getMedia(verificationId) {
         return await response.json();
     } catch (err) {
         console.log("getMedia method error", err);
+    }
+}
+
+async function getPerson(verificationId) {
+    try {
+        const headers = {
+            "x-auth-client": API_TOKEN,
+            "x-hmac-signature": generateSignature(verificationId, API_SECRET),
+        };
+
+        const options = { method: "GET", headers: headers };
+        const response = await fetch(
+            API_URL + "/sessions/" + verificationId + "/person",
+            options
+        );
+        return await response.json();
+    } catch (err) {
+        console.log("getPerson method error", err);
+    }
+}
+
+async function getCURP(verificationId) {
+    try {
+        const headers = {
+            "x-auth-client": API_TOKEN,
+            "x-hmac-signature": generateSignature(verificationId, API_SECRET),
+        };
+
+        const options = { method: "GET", headers: headers };
+        const response = await fetch(
+            API_URL +
+                "/sessions/" +
+                verificationId +
+                "/decision/curp-registry?version=1.0.0",
+            options
+        );
+        return await response.json();
+    } catch (err) {
+        console.log("getCURP method error", err);
+    }
+}
+
+async function getDecision(verificationId) {
+    try {
+        const headers = {
+            "x-auth-client": API_TOKEN,
+            "x-hmac-signature": generateSignature(verificationId, API_SECRET),
+        };
+
+        const options = { method: "GET", headers: headers };
+        const response = await fetch(
+            API_URL + "/sessions/" + verificationId + "/decision",
+            options
+        );
+        return await response.json();
+    } catch (err) {
+        console.log("getDecision method error", err);
+    }
+}
+
+async function getAttempts(verificationId) {
+    try {
+        const headers = {
+            "x-auth-client": API_TOKEN,
+            "x-hmac-signature": generateSignature(verificationId, API_SECRET),
+        };
+
+        const options = { method: "GET", headers: headers };
+        const response = await fetch(
+            API_URL + "/sessions/" + verificationId + "/attempts",
+            options
+        );
+        return await response.json();
+    } catch (err) {
+        console.log("getINE method error", err);
+    }
+}
+
+async function getAttemptMedia(attemptId) {
+    try {
+        const headers = {
+            "x-auth-client": API_TOKEN,
+            "x-hmac-signature": generateSignature(attemptId, API_SECRET),
+        };
+
+        const options = { method: "GET", headers: headers };
+        const response = await fetch(
+            API_URL + "/attempts/" + attemptId + "/media",
+            options
+        );
+        return await response.json();
+    } catch (err) {
+        console.log("getINE method error", err);
     }
 }
 
