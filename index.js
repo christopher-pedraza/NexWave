@@ -7,10 +7,84 @@ const prompt = "Como puedo invertir mi dinero?";
 
 const phoneNumberId = "391623854042683"; // Reemplaza con tu ID de número de teléfono
 const accessToken =
-	"EAAHRUwjl9O4BOyY7fukZAudMLgHlxNIi6jicr4C9zjxhfb41roJClNLLMlBU4Frhy57eEqy70iZA8Tybofgmf1hfqxHyHpSQr544zNse31dJ7PZBA3uFFfK5MXMuMX7XZCnlBgJs6xT4Lu3C39jitNNteK0LqafDTWipGZAOgw4eIEnECFarVs1VzuJRTLp6tzyWH2eGkhEc95yBqlskUqw7SnQMZD"; // Reemplaza con tu token de acceso
+	"EAAHRUwjl9O4BOZCcWxvWSyCq5OvMga9GeUiIh2SN4gu93Ju37FudXH9UH5IJRrO8rUrV6MJ5dsZBjBiH7XpkSwtL4UcugJkt4YE3b63ZBZBuWDjNeQILKszWDyXD0Py27DWCDM5JKpW3cNkFx3ZBUcRlfjjCLtfJtFga0WKpLytUf5ZAG3nHT731TuGLY9cSrwmn9Yt1ZA4mcletqwZB4oBHxSxRIl17"; // Reemplaza con tu token de acceso
 const verificationToken = "mi-token-de-verificacion-secreto"; // Esto debe coincidir con el token que ingresaste en Meta
 const targetNumber = "528332666331";
 var estadoQuiz = 0;
+var estadoQnAprimermensaje = false;
+// Estado de la verificación Veriff
+let estadoVeriff = false;
+var correo = false;
+var counter = 0;
+
+// Tu clave de API y URL de Veriff
+const apiKey = "341af7eb-f5c0-4893-b2b9-b38e24b63d28";
+const apiSecret = "7228ea63-651c-4a45-b0e2-89db7b8aa429";
+const veriffUrl = "https://stationapi.veriff.com/v1/sessions";
+
+async function startVeriffVerification(userId, callbackUrl) {
+	try {
+		const response = await axios.post(
+			`${veriffUrl}`,
+			{
+				verification: {
+					callback: callbackUrl,
+				},
+			},
+			{
+				headers: {
+					"Content-Type": "application/json",
+					"X-AUTH-CLIENT": apiKey, // Usa X-AUTH-CLIENT para la autenticación
+				},
+			}
+		);
+		console.log(response);
+		// Extrae la URL de verificación y el ID de la sesión de la respuesta
+		const verificationUrl = response.data.verification.url;
+		const sessionId = response.data.verification.id;
+		console.log(verificationUrl);
+		return JSON.stringify(verificationUrl);
+	} catch (error) {
+		console.error("Error initiating Veriff verification:", error);
+		throw error;
+	}
+}
+
+app.post("/veriff/callback", async (req, res) => {
+
+		//const verificationStatus = req.verification.status; // Ajusta según la estructura de los datos de Veriff
+		//console.log(verificationStatus);
+
+
+	if (true) {
+		// Verificación exitosa
+		console.log(
+			`Verificación exitosa`
+		);
+
+		// Enviar mensaje a WhatsApp confirmando la verificación
+		await sendMessage(
+			targetNumber,
+			"✅ ¡Genial! Tu verificación ha sido completada con éxito."
+		);
+
+		// Opcional: Redirigir al usuario a una página o proporcionar un enlace
+		await sendMessage(targetNumber, "¡Solo un paso más para que obtengas todos los beneficios que Banorte tiene para ti!");
+        correo = true;
+	} else {
+		// Verificación fallida
+		console.log(
+			`Verificación fallida para el usuario ${verificationStatus.externalId}`
+		);
+		// Notificar al usuario de la falla
+		await sendMessage(
+			targetNumber,
+			"La verificación de identidad no fue exitosa. Por favor, intenta nuevamente."
+		);
+	}
+
+	res.sendStatus(200); // Responder a Veriff que hemos recibido el callback
+});
 
 // Ruta para el Webhook de verificación
 app.get("/webhook", (req, res) => {
@@ -83,75 +157,73 @@ const quizQuestions = [
 ];
 
 app.use(express.json());
-app.post("/webhook", (req, res) => {
+// Webhook para manejar los mensajes entrantes
+app.post("/webhook", async (req, res) => {
 	try {
-		console.log(
-			req.body.entry[0].changes[0].value.messages[0].interactive.button_reply
-				.title
-		);
+		const entry = req.body.entry?.[0];
+		const change = entry?.changes?.[0]?.value;
+		const message = change?.messages?.[0];
+		const from = message?.from;
+		const messageBody = message?.text?.body; // Si es un mensaje de texto
+		const buttonResponse = message?.interactive?.button_reply?.title; // Si es un botón
+        console.log(correo);
 
-		// Check if req.body.entry exists and is an array with at least one item
-		if (
-			!req.body ||
-			!req.body.entry ||
-			!Array.isArray(req.body.entry) ||
-			req.body.entry.length === 0
-		) {
-			console.log("No entry data found");
-			return res.sendStatus(400); // Bad Request
-		}
+		if (estadoQnA) {
+			if (!estadoQnAprimermensaje) {
+				// Si no es el primer mensaje, inicia el Q&A
+				await startQnA(targetNumber, req);
+			} else {
+				// Verificar si fue una respuesta de botón o texto
+				if (buttonResponse) {
+					// Respuesta mediante un botón
+					await handleQnAResponse(targetNumber, buttonResponse);
+				} else if (messageBody) {
+					// Respuesta mediante texto
+					await handleQnAResponse(targetNumber, messageBody);
+				}
+			}
+		} else if (estadoQuiz === 1) {
+			// Si estamos en el quiz, manejamos la respuesta del quiz
+			if (buttonResponse) {
+				await handleQuizResponse(targetNumber, buttonResponse);
+			} else if (estadoVeriff && messageBody) {
+				// Confirmar que Veriff se completó
+				console.log("Verificación con Veriff completada.");
+				await sendMessage(
+					targetNumber,
+					"La verificación de identidad ha sido completada con éxito. Ahora, por favor, envíanos tu correo electrónico para la verificación 2FA."
+				);
+				estadoVeriff = false; // Restablecer estado
+			}
+		} else if (correo == true && counter == 0) {
+            counter = 1;
+            await sendMessage(
+                targetNumber,
+                "🔑 Aquí están tus credenciales temporales para iniciar sesión en la aplicación de Banorte. Por razones de seguridad, necesitarás cambiar esta contraseña temporal después de iniciar sesión."
+            );
+            const user = generarCodigo2FA();
+            const pass = generarCodigo2FA();
+            await sendMessage(
+                targetNumber,
+            `*ID de usuario:* ${user}\n*Contraseña temporal:* ${pass}\n\n`
+            );
+            const botonesFin = [
+                "Chat de dudas 🤖",
+                "Tu perfil financiero",
+            ];
+            await sendButtonsMessage(targetNumber, "🎓 ¡Sigue aprendiendo con Banorte!", "Estoy aquí para ayudarte con tus necesidades financieras. Utiliza los botones interactivos para continuar o haz clic en el ícono de llamada para conectar con uno de nuestros asesores. :)", botonesFin);
 
-		const entry = req.body.entry[0]; // Access the first entry
 
-		// Check if changes array exists and has at least one item
-		if (
-			!entry.changes ||
-			!Array.isArray(entry.changes) ||
-			entry.changes.length === 0
-		) {
-			console.log("No changes found in entry");
-			return res.sendStatus(400); // Bad Request
-		}
-
-		const change = entry.changes[0].value;
-
-		// Check if messages array exists and has at least one item
-		if (
-			!change.messages ||
-			!Array.isArray(change.messages) ||
-			change.messages.length === 0
-		) {
-			console.log("No messages found in changes");
-			return res.sendStatus(400); // Bad Request
-		}
-
-		const message = change.messages[0];
-
-		// Now safely access the data
-		const from = message.from;
-		const messageBody = message.text && message.text.body;
-        
-
-		console.log(`Received message from ${from}: ${messageBody}`);
-
-        if (estadoQnA[from]) {
-			// Manejar la respuesta del Q&A
-			const buttonResponse = message.interactive && message.interactive.button_reply && message.interactive.button_reply.title;
-			handleQnAResponse(from, buttonResponse || messageBody);
         }
+        else {
+			// Si no es el quiz ni Q&A, inicia el chatbot
+			await iniciarChatbot(req);
+		}
 
-        if (estadoQuiz == 1) {
-            // Si hay una respuesta a un botón, manejar el quiz
-            handleQuizResponse(targetNumber, req.body.entry[0].changes[0].value.messages[0].interactive.button_reply
-                .title);
-        } else {
-            iniciarChatbot(req); // Iniciar el chatbot si no es parte del quiz
-        }
-
-		res.sendStatus(200); // OK
+		res.sendStatus(200);
 	} catch (error) {
 		console.error("Error handling the webhook event:", error);
-		res.sendStatus(500); // Internal Server Error
+		res.sendStatus(500);
 	}
 });
 
@@ -232,8 +304,6 @@ async function sendMessage(to, message) {
 	}
 }
 
-
-
 // Enviar el mensaje inicial al número específico
 const hd = "👋 ¡Hola, soy Banorte Buddy!";
 const question =
@@ -245,103 +315,121 @@ const buttons = [
 ];
 
 let userAnswers = {}; // Objeto para almacenar las respuestas de los usuarios
-let estadoQnA = {}; // Almacena el estado de Q&A por usuario
+let estadoQnA = false; // Almacena el estado de Q&A por usuario
 
 // Función para enviar la pregunta del quiz con botones
 async function sendQuizQuestion(to, questionIndex) {
-    if (questionIndex >= quizQuestions.length) {
-        // Quiz terminado
-        await sendMessage(to, "¡Gracias por completar el quiz!");
-        estadoQuiz = 2;
-        generateProposal(userAnswers);
-        console.log('Respuestas del usuario:', userAnswers[to]); // Mostrar respuestas
-        return;
-    }
+	if (questionIndex >= quizQuestions.length) {
+		// Quiz terminado
+		await sendMessage(to, "¡Gracias por completar el quiz!");
+		estadoQuiz = 2;
+		const proposal = await generateProposal(JSON.stringify(userAnswers));
+		await sendMessage(targetNumber, proposal);
+		console.log("Respuestas del usuario:", userAnswers[to]); // Mostrar respuestas
+		return;
+	}
 
-    const { question, answers } = quizQuestions[questionIndex];
-    await sendButtonsMessage(to, "Quiz financiero", question, answers);
+	const { question, answers } = quizQuestions[questionIndex];
+	await sendButtonsMessage(to, "Quiz financiero", question, answers);
 }
 
 // Función para manejar la respuesta del quiz
 async function handleQuizResponse(senderId, response) {
-    // Guardar la respuesta del usuario
-    if (!userAnswers[senderId]) {
-        userAnswers[senderId] = []; // Inicializar si no existe
-    }
-    userAnswers[senderId].push(response);
+	// Guardar la respuesta del usuario
+	if (!userAnswers[senderId]) {
+		userAnswers[senderId] = []; // Inicializar si no existe
+	}
+	userAnswers[senderId].push(response);
 
-    // Determinar cuál es la siguiente pregunta
-    const currentQuestionIndex = userAnswers[senderId].length;
-    await sendQuizQuestion(senderId, currentQuestionIndex);
+	// Determinar cuál es la siguiente pregunta
+	const currentQuestionIndex = userAnswers[senderId].length;
+	await sendQuizQuestion(senderId, currentQuestionIndex);
 }
 
 // Pregunta para el Q&A
 const qnaQuestions = [
 	{
-		question:
-			"¿Tienes alguna otra duda sobre finanzas?",
-		answers: [
-			truncateText("Sí", 20),
-			truncateText("No", 20),
-		],
+		question: "¿Tienes alguna otra duda sobre finanzas?",
+		answers: [truncateText("Sí", 20), truncateText("No", 20)],
 	},
-]
+];
 
 // Función para iniciar el Q&A
-async function startQnA(to, userMessage) {
-    estadoQnA[to] = true; // Marca que el usuario está en el Q&A
-    await sendMessage(to, "¿Qué dudas acerca de finanzas tienes?");
+async function startQnA(to, req) {
+	const userMessage = req.body.entry[0].changes[0].value.messages[0].text?.body; // Extrae el texto del usuario si existe
 
-    const guidance = await generateGuidance(userMessage);
+	const guidance = await generateGuidance(userMessage);
 
-    // Envía la orientación generada al usuario
-    await sendMessage(to, guidance);
+	// Envía la orientación generada al usuario
+	await sendMessage(to, guidance);
 
-    // Manda la primera pregunta del Q&A con botones
-    const { question, answers } = qnaQuestions[0];
-    await sendButtonsMessage(to, "Chat de dudas 🤖", question, answers);
+	estadoQnAprimermensaje = true; // Marcar que ya recibimos el primer mensaje
+
+	// Enviar la primera pregunta del Q&A con botones
+	const { question, answers } = qnaQuestions[0];
+	await sendButtonsMessage(to, "Chat de dudas 🤖", question, answers);
+	estadoQnAprimermensaje = false; // Se resetea para esperar la siguiente interacción
 }
 
+// Función para manejar la respuesta del Q&A
 async function handleQnAResponse(senderId, response) {
-    if (estadoQnA[senderId]) {
-        if (response === "No") {
-            // Si el usuario responde "No", termina el Q&A
-            await sendMessage(senderId, "Gracias por participar en el chat de dudas.");
-            estadoQnA[senderId] = false; // Marca que ya no está en el Q&A
-        } else if (response === "Sí") {
-            // Si responde "Sí", continúa el Q&A
-            await sendMessage(senderId, "Por favor, escribe tu próxima duda.");
-        } else {
-            // Respuesta no esperada
-            await sendMessage(senderId, "Por favor selecciona una opción válida.");
-            const { question, answers } = qnaQuestions[0];
-            await sendButtonsMessage(senderId, "Chat de dudas 🤖", question, answers);
-        }
-    }
+	if (estadoQnA) {
+		if (response === "No") {
+			// Si el usuario responde "No", termina el Q&A
+			await sendMessage(
+				senderId,
+				"Gracias por participar en el chat de dudas."
+			);
+			estadoQnA = false; // Marca que ya no está en el Q&A
+			estadoQnAprimermensaje = false;
+		} else if (response === "Sí") {
+			// Si responde "Sí", continúa el Q&A
+			await sendMessage(senderId, "Por favor, escribe tu próxima duda.");
+		} else {
+			// Respuesta no esperada o respuesta por texto
+			await sendMessage(senderId, "Por favor selecciona una opción válida.");
+			const { question, answers } = qnaQuestions[0];
+			await sendButtonsMessage(senderId, "Chat de dudas 🤖", question, answers);
+		}
+	}
 }
 
+function generarCodigo2FA() {
+	return Math.floor(1000000 + Math.random() * 9000000); // Genera un número de 6 dígitos
+}
 
 async function iniciarChatbot(req) {
-    const payload =
-	req.body.entry[0].changes[0].value.messages[0].interactive.button_reply.title;
-    const userMessage = req.body.entry[0].changes[0].value.messages[0].text.body; // Extrae el texto del usuario
+	const payload =
+		req.body.entry[0].changes[0].value.messages[0].interactive.button_reply
+			.title;
+	//const userMessage = req.body.entry[0].changes[0].value.messages[0].text.body; // Extrae el texto del usuario
 	switch (payload) {
 		case "Chat de dudas 🤖":
 			// Código para iniciar el chat de dudas
 			console.log("Iniciando chat de dudas...");
-            await startQnA(targetNumber, userMessage);
+			estadoQnA = true; // Marca que el usuario está en el Q&A
+			await sendMessage(targetNumber, "¿Qué dudas acerca de finanzas tienes?");
 			break;
 
 		case "Crear una cuenta 📝":
 			// Código para crear una cuenta
 			console.log("Iniciando proceso de creación de cuenta...");
 			// Lógica para iniciar proceso de crear cuenta
+			const veriffUrl = await startVeriffVerification(
+				targetNumber,
+				"https://de4f-131-178-102-164.ngrok-free.app/veriff/callback"
+			);
+			await sendMessage(
+				targetNumber,
+				`Por favor, completa el proceso de verificación a través de este enlace: ${veriffUrl}`
+			);
+			estadoVeriff = true; // Marcar que el usuario está en el proceso de verificación con Veriff
 			break;
 
 		case "Tu perfil financiero":
-			console.log('Iniciando quiz interactivo...');
-            estadoQuiz = 1;
-            await sendQuizQuestion(targetNumber, 0); 
+			console.log("Iniciando quiz interactivo...");
+			estadoQuiz = 1;
+			await sendQuizQuestion(targetNumber, 0);
 			break;
 
 		default:

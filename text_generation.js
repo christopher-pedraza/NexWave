@@ -94,12 +94,13 @@ module.exports = {
     generateGuidance: async function(prompt) {
         const result = await model.generateContent(contextPrompt1 + contextPrompt2 + prompt);
         console.log(result.response.text());
-        return result;
+        return result.response.text();
     },
 
     generateProposal: async function(prompt) {
+        console.log("answers: " + prompt);
         const result = await model.generateContent(contextPrompt1 + contextPrompt2 + contextPrompt3 + prompt + contextPrompt4);
         console.log(result.response.text());
-        return result;
+        return result.response.text();
     }
 };
