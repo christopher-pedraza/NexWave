@@ -1,9 +1,7 @@
 import { Button } from "@nextui-org/react";
 
+import SecondaryDashboard from "./SecondaryDashboard/SecondaryDashboard";
+
 export default function App() {
-  return (
-    <Button color="primary">
-      Click on the Vite and React logos to learn more
-    </Button>
-  );
+    return <SecondaryDashboard />;
 }
