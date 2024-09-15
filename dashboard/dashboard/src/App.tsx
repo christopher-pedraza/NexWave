@@ -4,7 +4,7 @@ import SecondaryDashboard from "./BigComponents/SecondaryDashboard/SecondaryDash
 function App() {
     return (
         <>
-            <Dashboard />
+            <SecondaryDashboard />
         </>
     );
 }
