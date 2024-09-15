@@ -4,10 +4,12 @@ const app = express();
 
 const phoneNumberId = "391623854042683"; // Reemplaza con tu ID de número de teléfono
 const accessToken =
-	"EAAHRUwjl9O4BOyY7fukZAudMLgHlxNIi6jicr4C9zjxhfb41roJClNLLMlBU4Frhy57eEqy70iZA8Tybofgmf1hfqxHyHpSQr544zNse31dJ7PZBA3uFFfK5MXMuMX7XZCnlBgJs6xT4Lu3C39jitNNteK0LqafDTWipGZAOgw4eIEnECFarVs1VzuJRTLp6tzyWH2eGkhEc95yBqlskUqw7SnQMZD"; // Reemplaza con tu token de acceso
+	"EAAHRUwjl9O4BO92yZA12ol9wzRzTtrTluxittTITEnKrvgFF9Tw3XcopnNk8745Jnx127Nlr3etvXOLCHzETLxDmXF5PRNGQOiFX9rZAtRUDw7wZAo4r7n2DB3ScoSV2KVcmhBmqKe1A3kphojumuy2fxzpTBx59O3UqeaeGqZBRz1eoVERnkS2f6YYbfag859gb9NXixEKZAplu3Rczk9QRWQUoZD"; // Reemplaza con tu token de acceso
 const verificationToken = "mi-token-de-verificacion-secreto"; // Esto debe coincidir con el token que ingresaste en Meta
 const targetNumber = "528332666331";
+
 var estadoQuiz = 0;
+var estadoCreacionCuenta = 0;
 
 // Ruta para el Webhook de verificación
 app.get("/webhook", (req, res) => {
@@ -130,13 +132,22 @@ app.post("/webhook", (req, res) => {
         
 
 		console.log(`Received message from ${from}: ${messageBody}`);
+
+     
+
+
+            
         if (estadoQuiz == 1) {
             // Si hay una respuesta a un botón, manejar el quiz
             handleQuizResponse(targetNumber, req.body.entry[0].changes[0].value.messages[0].interactive.button_reply
                 .title);
+        } if (estadoCreacionCuenta == 1) {
+            console.log("hola");
+            manejarFotos(req, targetNumber)
         } else {
             iniciarChatbot(req); // Iniciar el chatbot si no es parte del quiz
         }
+
 
 		res.sendStatus(200); // OK
 	} catch (error) {
@@ -263,6 +274,30 @@ async function handleQuizResponse(senderId, response) {
     await sendQuizQuestion(senderId, currentQuestionIndex);
 }
 
+async function iniciarCreacionCuenta(to) {
+    await sendMessage(to, "Para crear tu cuenta, necesitaré que envíes las siguientes fotos: \n1. Tu INE (ambos lados) 🪪\n2. Una foto de tu cara. 😎🤳");
+    estadoCreacionCuenta = 1;
+}
+
+async function manejarFotos(req, senderId) {
+    const files = req.files || [];
+    console.log("llegue aqui");
+    const documentArray = [];
+
+    // Almacena cada archivo recibido en el array
+    for (const file of files) {
+        documentArray.push(file.buffer); // Agrega el contenido del archivo al array
+        console.log(file);
+    }
+
+    if (documentArray.length === 3) {
+        // Si se han recibido 3 archivos, procesa la información
+        await sendMessage(senderId, "Recibí tus documentos. Estoy procesando la información, por favor, espera un momento.");
+        //await procesarDocumentos(senderId, documentArray); // Función para manejar la API de autenticación
+    }
+}
+
+
 
 
 async function iniciarChatbot(req) {
@@ -279,6 +314,8 @@ async function iniciarChatbot(req) {
 			// Código para crear una cuenta
 			console.log("Iniciando proceso de creación de cuenta...");
 			// Lógica para iniciar proceso de crear cuenta
+            estadoCreacionCuenta = 1;
+            await iniciarCreacionCuenta(targetNumber);
 			break;
 
 		case "Tu perfil financiero":
