@@ -2,6 +2,9 @@ const express = require("express");
 const axios = require("axios");
 const app = express();
 
+const { generateStory } = require("./text_generation.js");
+const prompt = "Como puedo invertir mi dinero?";
+
 const phoneNumberId = "391623854042683"; // Reemplaza con tu ID de número de teléfono
 const accessToken =
 	"EAAHRUwjl9O4BOyY7fukZAudMLgHlxNIi6jicr4C9zjxhfb41roJClNLLMlBU4Frhy57eEqy70iZA8Tybofgmf1hfqxHyHpSQr544zNse31dJ7PZBA3uFFfK5MXMuMX7XZCnlBgJs6xT4Lu3C39jitNNteK0LqafDTWipGZAOgw4eIEnECFarVs1VzuJRTLp6tzyWH2eGkhEc95yBqlskUqw7SnQMZD"; // Reemplaza con tu token de acceso
@@ -303,3 +306,5 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
 	console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
+
+generateStory(prompt);
