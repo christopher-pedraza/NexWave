@@ -1,4 +1,5 @@
 import Dashboard from "./MainDashboard/Dashboard";
+import IndividualDashboard from "./IndividualDashboard/IndividualDashboard";
 import NavigationMenu from "./Menu/NavigationMenu";
 // External functions
 import {
@@ -14,6 +15,7 @@ const appRouter = createBrowserRouter(
     <Route path="/" element={<NavigationMenu />}>
       {/* Use navigate to render signup as the default page */}
       <Route index element={<Dashboard />} />
+      <Route path="indv" element={<IndividualDashboard />} />
     </Route>
   )
 );
@@ -24,5 +26,4 @@ export default function App() {
       <RouterProvider router={appRouter} />
     </div>
   );
-  // return <Dashboard />;
 }
