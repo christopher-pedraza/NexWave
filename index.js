@@ -2,8 +2,10 @@ const express = require("express");
 const axios = require("axios");
 const app = express();
 
+const dotenv = require("dotenv");
+dotenv.config();
+
 const { generateGuidance, generateProposal } = require("./text_generation.js");
-const prompt = "Como puedo invertir mi dinero?";
 
 const phoneNumberId = "391623854042683"; // Reemplaza con tu ID de número de teléfono
 const accessToken =
