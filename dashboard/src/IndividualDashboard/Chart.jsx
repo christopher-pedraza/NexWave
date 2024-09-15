@@ -1,6 +1,7 @@
 import BarChart from "./BarChartComponent";
 import LineChartComponent from "./LineChartComponent";
 import { Divider } from "@nextui-org/react"; // Importar Divider de NextUI
+import Cards from "./Cards";
 
 export default function Chart() {
   return (
@@ -17,6 +18,7 @@ export default function Chart() {
             </p>
           </div>
         </div>
+        <Cards />
 
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">

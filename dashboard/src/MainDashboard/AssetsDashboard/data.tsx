@@ -2,7 +2,7 @@
 export const data = [
   {
     id: 1,
-    nombre: "Lanzamiento de Primavera",
+    nombre: "Semana del Financiero",
     sentimiento: "Negativo",
     cuentasCreadas: 1200,
     estatus: "Activo",

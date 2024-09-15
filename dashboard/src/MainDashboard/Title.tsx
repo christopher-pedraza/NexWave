@@ -60,30 +60,6 @@ export default function Title() {
                       defaultValue={[10, 20]}
                       className="max-w-md mb-4"
                     />
-                    {/* <Slider
-                                            label="Experiencia financiera"
-                                            color="foreground"
-                                            size="md"
-                                            step={1}
-                                            maxValue={2}
-                                            hideValue={true}
-                                            marks={[
-                                                {
-                                                    value: 0,
-                                                    label: "Básica",
-                                                },
-                                                {
-                                                    value: 1,
-                                                    label: "Intermedia",
-                                                },
-                                                {
-                                                    value: 2,
-                                                    label: "Avanzada",
-                                                },
-                                            ]}
-                                            defaultValue={0}
-                                            className="max-w-md mb-8"
-                                        /> */}
                     <RadioGroup
                       label="Experiencia financiera"
                       orientation="horizontal"
