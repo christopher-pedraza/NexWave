@@ -1,5 +1,5 @@
-import Dashboard from "./BigComponents/MainDashboard/Dashboard.tsx";
 import "./App.css";
+import Dashboard from "./BigComponents/MainDashboard/Dashboard";
 
 function App() {
   return (
