@@ -182,25 +182,40 @@ async function handleQuizResponse(senderId, response) {
 }
 
 async function iniciarCreacionCuenta(to) {
-    await sendMessage(to, "Para crear tu cuenta, necesitaré que envíes las siguientes fotos: \n1. Tu INE (ambos lados) 🪪\n2. Una foto de tu cara. 😎🤳");
+    await sendMessage(to, "Para crear tu cuenta, necesitaré que envíes las siguientes fotos: \n1. Tu INE (ambos lados) 🪪 o pasaporte \n2. Una foto de tu cara. 😎🤳");
     estadoCreacionCuenta = 1;
 }
 
 async function manejarFotos(req, senderId) {
-    const files = req.files || [];
-    console.log("Archivos recibidos:", files);
-    const documentArray = [];
+    const { messages } = req.body.entry[0].changes[0].value;
 
-    for (const file of files) {
-        documentArray.push(file.buffer);
-        console.log(file);
+    // Verifica si hay mensajes y si el primer mensaje es una imagen
+    if (!messages || !messages.length || messages[0].type !== 'image') {
+        console.log("No se recibió una imagen");
+        return;
     }
 
-    if (documentArray.length === 3) {
-        await sendMessage(senderId, "Recibí tus documentos. Estoy procesando la información, por favor, espera un momento.");
-        // await procesarDocumentos(senderId, documentArray);
+    // Obtén los datos de la imagen
+    const image = messages[0].image;
+
+    // Aquí podrías obtener más detalles o procesar la imagen según el caso
+    console.log(`Imagen recibida - ID: ${image.id}, Mime Type: ${image.mime_type}`);
+
+    // Si necesitas descargar la imagen, usa el ID de la imagen para hacer una solicitud adicional
+    try {
+        const response = await axios.get(`https://graph.facebook.com/v16.0/${image.id}?fields=picture&access_token=${accessToken}`, { responseType: 'arraybuffer' });
+        const imageBuffer = Buffer.from(response.data);
+
+        // Procesa el archivo según sea necesario
+        console.log(`Imagen descargada: ${imageBuffer.length} bytes`);
+        // Puedes almacenar la imagen en un array o procesarla directamente
+        // Si es necesario, actualiza el estado o ejecuta otra lógica
+    } catch (error) {
+        console.error("Error al descargar la imagen:", error);
     }
 }
+
+
 
 async function iniciarChatbot(req) {
     const payload = req.body.entry[0].changes[0].value.messages[0].interactive.button_reply.title;
