@@ -1,9 +1,16 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const dotenv = require("dotenv");
+const express = require("express");
+const bodyParser = require("body-parser");
+
 dotenv.config();
 const uri = process.env.MONGODB_URI;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+if (!uri) {
+    console.error("MONGODB_URI is not defined in the environment variables.");
+    process.exit(1);
+}
+
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -12,18 +19,51 @@ const client = new MongoClient(uri, {
     },
 });
 
-async function run() {
+const app = express();
+app.use(bodyParser.json());
+
+const connectToDb = async () => {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
-        // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log(
-            "Pinged your deployment. You successfully connected to MongoDB!"
-        );
-    } finally {
-        // Ensures that the client will close when you finish/error
-        await client.close();
+        console.log("Connected to MongoDB");
+        return client.db("yourDatabaseName").collection("yourCollectionName");
+    } catch (err) {
+        console.error("Failed to connect to MongoDB", err);
+        throw err;
     }
-}
-run().catch(console.dir);
+};
+
+// Insert data endpoint
+app.post("/", async (req, res) => {
+    try {
+        const collection = await connectToDb();
+        const data = req.body;
+        const result = await collection.insertOne(data);
+        res.status(201).send(result);
+    } catch (error) {
+        res.status(500).send(error);
+    } finally {
+        await client.close();
+        console.log("Connection closed");
+    }
+});
+
+// Get data endpoint
+app.get("/", async (req, res) => {
+    try {
+        const collection = await connectToDb();
+        const data = await collection.find({}).toArray();
+        res.status(200).send(data);
+    } catch (error) {
+        res.status(500).send(error);
+    } finally {
+        await client.close();
+        console.log("Connection closed");
+    }
+});
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
