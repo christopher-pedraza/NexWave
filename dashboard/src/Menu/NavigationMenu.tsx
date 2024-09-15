@@ -3,21 +3,39 @@ import { Listbox, ListboxItem } from "@nextui-org/react"; // NextUI components f
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import { Outlet } from "react-router-dom"; // Import Outlet to render child components
+import { Outlet, useNavigate } from "react-router-dom"; // Import Outlet and useNavigate
 
 function NavigationMenu() {
+  const navigate = useNavigate(); // Initialize the useNavigate hook for navigation
+
+  // Handlers for icon clicks
+  const handleNavigateToHome = () => {
+    navigate("/"); // Navigate to Home
+  };
+
+  const handleNavigateToIndv = () => {
+    navigate("/indv"); // Navigate to Individual Dashboard
+  };
+
+  const handleNavigateBackToHome = () => {
+    navigate("/"); // Navigate back to Home (for third icon)
+  };
+
   // List using NextUI Listbox and MUI Icons
   const DrawerList = (
     <Listbox aria-label="Sidebar actions">
-      <ListboxItem key="pacientes">
+      {/* First icon navigates to Home ("/") */}
+      <ListboxItem key="pacientes" onClick={handleNavigateToHome}>
         <PeopleAltIcon style={{ color: "#ecf0f1", fontSize: "24px" }} />
       </ListboxItem>
 
-      <ListboxItem key="dashboard">
+      {/* Second icon navigates to Individual Dashboard ("/indv") */}
+      <ListboxItem key="dashboard" onClick={handleNavigateToIndv}>
         <BarChartIcon style={{ color: "#ecf0f1", fontSize: "24px" }} />
       </ListboxItem>
 
-      <ListboxItem key="perfil">
+      {/* Third icon navigates back to Home ("/") */}
+      <ListboxItem key="perfil" onClick={handleNavigateBackToHome}>
         <AccountCircleIcon style={{ color: "#ecf0f1", fontSize: "24px" }} />
       </ListboxItem>
     </Listbox>
