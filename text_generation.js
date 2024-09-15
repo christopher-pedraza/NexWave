@@ -3,7 +3,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-const contextPrompt1 = `Esta es la primera parte de un prompt de contexto.
+const contextPrompt1 = `Aquí empieza la parte de un prompt de contexto.
 Eres un asistente de inteligencia artificial para el banco de Banorte. 
 Tu trabajo es resolver dudas con respecto a la educación financiera para un joven, de preferencia 
 dentro del contexto de las politicas del banco de Banorte. Cuando el usuario te pida información 
@@ -32,8 +32,7 @@ experta para orientar las decisiones de inversión. La liga para conocer más in
 https://www.banorte.com/wps/portal/banorte/Home/inversion-ahorro/instrumentos-inversion/altos-rendimientos
 `;
 
-const contextPrompt2 = `Esta es la segunda y última parte de un prompt de contexto.
-3) El plan Pagaré Digital ofrece una serie de beneficios convenientes para los inversionistas. 
+const contextPrompt2 = `3) El plan Pagaré Digital ofrece una serie de beneficios convenientes para los inversionistas. 
 Permite invertir de manera rápida, con la posibilidad de hacer crecer el dinero en minutos. 
 Los rendimientos se determinan en función del monto invertido y del plazo elegido. Ofrece 
 flexibilidad en los plazos de inversión y asegura liquidez del capital e intereses al vencimiento. 
@@ -60,21 +59,45 @@ Banortel, Banco en Línea o depósitos en efectivo en sucursales. Este plan tamb
 ofreciendo la posibilidad de retirar hasta el 100% de la inversión en cualquier momento, con solo realizar 
 una solicitud a través de los distintos canales disponibles, como Banortel, Banco en Línea o sucursales de Banorte.
 La liga para conocer más información es la siguiente: 
-https://www.banorte.com/wps/portal/banorte/Home/inversion-ahorro/instrumentos-inversion/inversion.inversion-plus
-`;
+https://www.banorte.com/wps/portal/banorte/Home/inversion-ahorro/instrumentos-inversion/inversion.inversion-plus.
+Aquí termina la parte del contexto del prompt. Contesta lo siguiente en base al contexto: `;
 
-/* async function context() {
-    const result1 = await model.generateContent(contextPrompt1);
-    const result2 = await model.generateContent(contextPrompt2);
-    //console.log(result.response.text());
-} */
+const contextPrompt3 = `Al usuario se le hizo una serie de preguntas para determinar su perfil financiero.
+Las preguntas en orden fueron: 
+1) Si tuvieras la oportunidad de conseguir un lugar para vivir, 
+¿preferirías comprar una casa o rentar un departamento?
+Esta pregunta explora la capacidad de ahorro o el acceso a crédito de la persona. Alguien que prefiera 
+rentar podría estar priorizando flexibilidad o tener menos capital disponible para una inversión grande.
 
-//context();
+2) ¿Qué harías si recibieras una cantidad inesperada de dinero, como un bono o un regalo?
+Las opciones pueden variar entre ahorrarlo, invertirlo, gastarlo o usarlo para pagar deudas. 
+Esto da una idea sobre las prioridades y el enfoque de la persona hacia el ahorro o el consumo.
+
+3) Cuando piensas en tus finanzas para los próximos 5 años, ¿cuáles son tus principales metas?
+Esta pregunta busca identificar si están más enfocados en metas de corto plazo (como comprar un auto o viajar) 
+o en metas de largo plazo (como ahorrar para una casa o inversión).
+
+4) Si tus amigos te invitan a una actividad costosa que no tenías planeada, ¿cómo reaccionarías?
+Esta respuesta puede mostrar si la persona tiende a seguir un presupuesto estricto, si prioriza experiencias 
+inmediatas o si tiende a ser flexible con sus gastos.
+
+5) ¿Qué importancia le das a aprender sobre inversiones o productos financieros, y has considerado invertir en algo antes?
+Esta pregunta revela el nivel de interés y conocimiento de la persona sobre inversiones, lo que permite 
+recomendar productos adecuados a su nivel de entendimiento y experiencia.
+
+El usuario contestó las preguntas en orden: `;
+
+const contextPrompt4 = ` En base a los planes de inversiones que ofrece Banorte, elige el plan que
+sea el más adecuado según el perfil del usuario y explica porqué le conviene ese plan.`;
 
 module.exports = {
-    generateStory: async function(_prompt) {
-        const result = await model.generateContent(contextPrompt1 + contextPrompt2 + _prompt);
+    generateGuidance: async function(prompt) {
+        const result = await model.generateContent(contextPrompt1 + contextPrompt2 + prompt);
+        console.log(result.response.text());
+    },
+
+    generateProposal: async function(prompt) {
+        const result = await model.generateContent(contextPrompt1 + contextPrompt2 + contextPrompt3 + prompt + contextPrompt4);
         console.log(result.response.text());
     }
 };
-

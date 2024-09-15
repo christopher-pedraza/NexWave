@@ -2,7 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const app = express();
 
-const { generateStory } = require("./text_generation.js");
+const { generateGuidance, generateProposal } = require("./text_generation.js");
 const prompt = "Como puedo invertir mi dinero?";
 
 const phoneNumberId = "391623854042683"; // Reemplaza con tu ID de número de teléfono
@@ -245,6 +245,7 @@ async function sendQuizQuestion(to, questionIndex) {
         // Quiz terminado
         await sendMessage(to, "¡Gracias por completar el quiz!");
         estadoQuiz = 2;
+        generateProposal(userAnswers);
         console.log('Respuestas del usuario:', userAnswers[to]); // Mostrar respuestas
         return;
     }
@@ -264,6 +265,28 @@ async function handleQuizResponse(senderId, response) {
     // Determinar cuál es la siguiente pregunta
     const currentQuestionIndex = userAnswers[senderId].length;
     await sendQuizQuestion(senderId, currentQuestionIndex);
+}
+
+
+const qnaQuestions = [
+	{
+		question:
+			"Tienes alguna otra duda?",
+		answers: [
+			truncateText("Comprar una casa", 20),
+			truncateText("Rentar departamento", 20),
+			truncateText("No estoy seguro", 20),
+		],
+	},
+]
+
+// Función para iniciar el Q&A
+async function startQnA(to) {
+
+    generateGuidance()
+
+    const { question, answers } = qnaQuestions[0];
+    await sendButtonsMessage(to, "Chat de dudas", question, answers);
 }
 
 
@@ -306,5 +329,3 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
 	console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
-
-generateStory(prompt);
