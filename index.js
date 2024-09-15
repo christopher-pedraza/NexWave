@@ -2,6 +2,8 @@ const qrcode = require('qrcode-terminal');
 const { Client } = require('whatsapp-web.js');
 const client = new Client();
 
+const { generateStory } = require("./text_generation.js");
+
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
 });
@@ -16,4 +18,8 @@ client.on('message', message => {
     }
 });
 
-client.initialize();
+//client.initialize();
+
+const prompt = "Como puedo invertir mi dinero?";
+
+generateStory(prompt);
