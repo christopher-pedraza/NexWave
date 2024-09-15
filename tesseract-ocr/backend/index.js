@@ -6,8 +6,8 @@ const uploadsDir = path.join(__dirname, "uploads");
 
 const config = {
     lang: "spa",
-    // oem: 1,
-    // psm: 3,
+    oem: 1,
+    psm: 3,
 };
 
 fs.readdir(uploadsDir, (err, files) => {
