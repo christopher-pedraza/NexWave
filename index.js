@@ -9,10 +9,12 @@ const { generateGuidance, generateProposal } = require("./text_generation.js");
 
 const phoneNumberId = "391623854042683"; // Reemplaza con tu ID de número de teléfono
 const accessToken =
-	"EAAHRUwjl9O4BOyY7fukZAudMLgHlxNIi6jicr4C9zjxhfb41roJClNLLMlBU4Frhy57eEqy70iZA8Tybofgmf1hfqxHyHpSQr544zNse31dJ7PZBA3uFFfK5MXMuMX7XZCnlBgJs6xT4Lu3C39jitNNteK0LqafDTWipGZAOgw4eIEnECFarVs1VzuJRTLp6tzyWH2eGkhEc95yBqlskUqw7SnQMZD"; // Reemplaza con tu token de acceso
+	"EAAHRUwjl9O4BO92yZA12ol9wzRzTtrTluxittTITEnKrvgFF9Tw3XcopnNk8745Jnx127Nlr3etvXOLCHzETLxDmXF5PRNGQOiFX9rZAtRUDw7wZAo4r7n2DB3ScoSV2KVcmhBmqKe1A3kphojumuy2fxzpTBx59O3UqeaeGqZBRz1eoVERnkS2f6YYbfag859gb9NXixEKZAplu3Rczk9QRWQUoZD"; // Reemplaza con tu token de acceso
 const verificationToken = "mi-token-de-verificacion-secreto"; // Esto debe coincidir con el token que ingresaste en Meta
 const targetNumber = "528332666331";
+
 var estadoQuiz = 0;
+var estadoCreacionCuenta = 0;
 
 // Ruta para el Webhook de verificación
 app.get("/webhook", (req, res) => {
@@ -146,9 +148,13 @@ app.post("/webhook", (req, res) => {
             // Si hay una respuesta a un botón, manejar el quiz
             handleQuizResponse(targetNumber, req.body.entry[0].changes[0].value.messages[0].interactive.button_reply
                 .title);
+        } if (estadoCreacionCuenta == 1) {
+            console.log("hola");
+            manejarFotos(req, targetNumber)
         } else {
             iniciarChatbot(req); // Iniciar el chatbot si no es parte del quiz
         }
+
 
 		res.sendStatus(200); // OK
 	} catch (error) {
@@ -338,6 +344,8 @@ async function iniciarChatbot(req) {
 			// Código para crear una cuenta
 			console.log("Iniciando proceso de creación de cuenta...");
 			// Lógica para iniciar proceso de crear cuenta
+            estadoCreacionCuenta = 1;
+            await iniciarCreacionCuenta(targetNumber);
 			break;
 
 		case "Tu perfil financiero":
